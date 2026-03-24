@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriPlate — Smart Canteen Ecosystem</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Roboto:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --green: #2D5A27;
+            --lime: #A4C639;
+            --cream: #F9F9F7;
+            --dark: #0F172A;
+            --cyan: #22D3EE;
+            --amber: #F59E0B;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark);
+            color: white;
+        }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(160deg, #0F172A, #022c22);
+            padding: 4rem 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+        }
+
+        .hero span {
+            background: linear-gradient(135deg, var(--lime), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            margin-top: 1rem;
+            color: #94A3B8;
+            max-width: 600px;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat h2 {
+            color: var(--lime);
+        }
+
+        /* SECTION */
+        .section {
+            padding: 5rem 2rem;
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .section p {
+            color: #9CA3AF;
+            margin-bottom: 2rem;
+        }
+
+        /* CARDS */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--cyan);
+        }
+
+        /* SPOILAGE GAUGE */
+        .gauge {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(var(--lime) 70%, #222 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: auto;
+        }
+
+        .gauge span {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        /* NUTRITION */
+        .bar {
+            height: 8px;
+            background: #222;
+            border-radius: 10px;
+            margin: 6px 0;
+        }
+
+        .fill {
+            height: 100%;
+            background: var(--lime);
+            border-radius: 10px;
+        }
+
+        /* SENSOR GRAPH MOCK */
+        .graph {
+            height: 150px;
+            background: linear-gradient(to top, rgba(34, 211, 238, 0.3), transparent);
+            border-radius: 12px;
+        }
+
+        /* DATABASE TOOLTIP */
+        .table-item {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .table-item:hover::after {
+            content: attr(data-info);
+            position: absolute;
+            left: 0;
+            top: 100%;
+            background: #111;
+            padding: 8px;
+            font-size: 12px;
+            border-radius: 6px;
+            width: 250px;
+        }
+
+        /* CTA */
+        .cta {
+            text-align: center;
+            padding: 5rem 2rem;
+            background: linear-gradient(160deg, #022c22, #0F172A);
+        }
+
+        .cta button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            background: var(--lime);
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HERO -->
+    <section class="hero">
+        <h1>Meet <span>NutriPlate</span></h1>
+        <p>The AI-powered Smart Canteen Ecosystem that ensures every meal is healthy, safe, and data-driven.</p>
+
+        <div class="hero-stats">
+            <div class="stat">
+                <h2>3</h2>
+                <p>AI Models</p>
+            </div>
+            <div class="stat">
+                <h2>101</h2>
+                <p>Food Classes</p>
+            </div>
+            <div class="stat">
+                <h2>Real-time</h2>
+                <p>Sensors</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROBLEM -->
+    <section class="section">
+        <h2>The Problem</h2>
+        <p>Students don’t know what they eat. Staff don’t know when food spoils.</p>
+
+        <div class="grid">
+            <div class="card">❌ Unknown Nutrition</div>
+            <div class="card">⚠️ Food Spoilage</div>
+            <div class="card">📉 Food Waste</div>
+            <div class="card">⏱️ No Monitoring</div>
+        </div>
+    </section>
+
+    <!-- SOLUTION -->
+    <section class="section">
+        <h2>The Solution</h2>
+        <p>A multimodal AI system combining vision + sensors.</p>
+
+        <div class="grid">
+            <div class="card">📸 Image Recognition (InceptionV3)</div>
+            <div class="card">🌫️ Sensor AI (BiLSTM)</div>
+            <div class="card">🧠 Fusion Model (MLP)</div>
+        </div>
+    </section>
+
+    <!-- SPOILAGE GAUGE -->
+    <section class="section">
+        <h2>Spoilage Detection</h2>
+        <div class="gauge"><span>70%</span></div>
+    </section>
+
+    <!-- SENSOR GRAPH -->
+    <section class="section">
+        <h2>Live Sensor Feed</h2>
+        <div class="graph"></div>
+    </section>
+
+    <!-- NUTRITION -->
+    <section class="section">
+        <h2>Nutrition Analysis</h2>
+
+        <div class="card">
+            Protein
+            <div class="bar">
+                <div class="fill" style="width:60%"></div>
+            </div>
+
+            Carbs
+            <div class="bar">
+                <div class="fill" style="width:80%"></div>
+            </div>
+
+            Fats
+            <div class="bar">
+                <div class="fill" style="width:40%"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DATABASE -->
+    <section class="section">
+        <h2>Database Schema</h2>
+
+        <div class="table-item" data-info="Stores student profiles & health goals">
+            users
+        </div>
+
+        <div class="table-item" data-info="Stores detected food items and predictions">
+            food_logs
+        </div>
+
+        <div class="table-item" data-info="Stores real-time sensor readings">
+            sensor_data
+        </div>
+
+        <div class="table-item" data-info="Stores nutrition mapping from CSV">
+            nutrition_data
+        </div>
+
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+        <h2>The Future of Dining</h2>
+        <p>AI that sees, smells, and understands your food.</p>
+        <button>Launch Demo</button>
+    </section>
+
+</body>
+
+</html>

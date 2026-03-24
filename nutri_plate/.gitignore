@@ -3,7 +3,6 @@
 .vscode/
 
 # Python Environments & Caches
-.env
 **/venv/
 **/.venv/
 **/__pycache__/
@@ -22,10 +21,10 @@ best_model_101class.hdf5
 model_trained_101class.hdf5
 
 # Datasets
-**/food-101/
+/food-101/
 test_images/
 .images/
-**/smart-canteen-ai/training/data/
+/smart-canteen-ai/training/data/
 
 # Frontend (Node / React Native / Expo)
 **/node_modules/
@@ -34,8 +33,8 @@ npm-debug.log*
 yarn-error.log*
 
 # Documentation
-**/smart-canteen-ai/Documentation/
-**/Documentation/
+/smart-canteen-ai/Documentation/
+/Documentation/
 
 # Other heavy files
 *.zip
@@ -49,5 +48,5 @@ yarn-error.log*
 *.onnx.data
 
 # Training Datasets
-**/smart-canteen-ai/training/data/
-**/training/data/
+/smart-canteen-ai/training/data/
+/training/data/
