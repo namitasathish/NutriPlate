@@ -28,6 +28,12 @@ BAUD_RATE = 9600
 RECONNECT_DELAY = 5     # seconds between reconnect attempts
 LOOP_SLEEP = 0.05       # 50ms main loop sleep
 
+# ── Shared serial connection reference ──
+# Other modules (e.g. demo mode in sensor_data.py) can send commands
+# to the Arduino via send_to_arduino().
+_serial_port = None
+_serial_lock = threading.Lock()
+
 # Common USB-Serial chip identifiers for auto-detection
 ARDUINO_KEYWORDS = [
     'arduino', 'ch340', 'ch341', 'ftdi', 'usb serial', 'usb-serial',
@@ -56,6 +62,33 @@ def find_arduino_port():
     return None
 
 
+def send_to_arduino(message: str) -> bool:
+    """
+    Send a command string to the Arduino over serial.
+    Used by demo mode to trigger buzzer/LED via RESULT commands.
+    Thread-safe — uses _serial_lock.
+    
+    Args:
+        message: e.g. "RESULT:25:Spoiled" (newline appended automatically)
+    
+    Returns:
+        True if sent successfully, False otherwise
+    """
+    global _serial_port
+    with _serial_lock:
+        if _serial_port is not None and _serial_port.is_open:
+            try:
+                if not message.endswith('\n'):
+                    message += '\n'
+                _serial_port.write(message.encode('utf-8'))
+                print(f"[->Arduino]  {message.strip()}")
+                return True
+            except Exception as e:
+                print(f"[->Arduino]  Write failed: {e}")
+                return False
+    return False
+
+
 def _reader_loop():
     """
     Main background loop:
@@ -67,6 +100,8 @@ def _reader_loop():
       6. Send AI result back to Arduino for LED/buzzer feedback
       7. Auto-reconnect if connection is lost
     """
+    global _serial_port
+
     # Lazy imports to avoid circular dependencies at module load time
     from routes.sensor_data import (
         process_raw_reading, process_sensor_batch,
@@ -92,6 +127,9 @@ def _reader_loop():
                         rtscts=False,
                     )
                     ser.reset_input_buffer()
+                    # Share the serial port so send_to_arduino() can use it
+                    with _serial_lock:
+                        _serial_port = ser
 
                     # Signal backend that we're connected (warmup phase)
                     _live_state["bridge_connected"] = True
@@ -174,12 +212,7 @@ def _reader_loop():
                             print(f"[AI]  ✓ Freshness: {fr:.1f}%  Status: {st}")
 
                             # Send result back to Arduino for LED/buzzer feedback
-                            try:
-                                feedback = f"RESULT:{int(round(fr))}:{st}\n"
-                                ser.write(feedback.encode('utf-8'))
-                                print(f"[->Arduino]  {feedback.strip()}")
-                            except Exception:
-                                pass
+                            send_to_arduino(f"RESULT:{int(round(fr))}:{st}")
                         print()
 
                 except json.JSONDecodeError:
@@ -192,6 +225,8 @@ def _reader_loop():
         except serial.SerialException as e:
             print(f"\n[Serial Reader] Connection lost: {e}")
             print(f"[Serial Reader] Will auto-reconnect in {RECONNECT_DELAY}s...")
+            with _serial_lock:
+                _serial_port = None
             ser = None
             _live_state["bridge_connected"] = False
             _live_state["connected"] = False

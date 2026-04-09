@@ -19,9 +19,9 @@ export default function MealPlannerScreen({ navigation }) {
 
     const goals = plate.goals;
     const macros = [
-        { key: 'calories', label: 'Calories', val: plate.totals.calories, max: goals.calories || 2000, color: '#EF4444', unit: 'kcal' },
-        { key: 'protein', label: 'Protein', val: plate.totals.protein, max: goals.protein || 60, color: '#6C63FF', unit: 'g' },
-        { key: 'carbs', label: 'Carbs', val: plate.totals.carbohydrates, max: goals.carbohydrates || 250, color: '#F59E0B', unit: 'g' },
+        { key: 'calories', label: 'Calories', val: plate.totals.calories, max: goals.calories || 2000, color: colors.danger, unit: 'kcal' },
+        { key: 'protein', label: 'Protein', val: plate.totals.protein, max: goals.protein || 60, color: colors.cyan, unit: 'g' },
+        { key: 'carbs', label: 'Carbs', val: plate.totals.carbohydrates, max: goals.carbohydrates || 250, color: colors.warning, unit: 'g' },
         { key: 'fat', label: 'Fat', val: plate.totals.fat, max: goals.fat || 65, color: '#A78BFA', unit: 'g' },
     ];
 

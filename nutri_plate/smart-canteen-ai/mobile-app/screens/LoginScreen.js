@@ -42,7 +42,7 @@ export default function LoginScreen({ navigation }) {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: COLORS.midnight }]}>
+        <View style={[styles.container, { backgroundColor: colors.bg }]}>
             <StatusBar barStyle="light-content" />
             <LinearGradient colors={['rgba(45,90,39,0.08)', 'transparent', 'rgba(6,182,212,0.05)']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.inner}>
@@ -55,36 +55,36 @@ export default function LoginScreen({ navigation }) {
                 </Animated.View>
 
                 <Animated.View style={{ opacity: taglineAnim, transform: [{ translateY: taglineAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }], alignItems: 'center', marginBottom: spacing.xl }}>
-                    <Text style={[typography.bodyLight, { color: COLORS.white40, textAlign: 'center' }]}>AI-Powered Smart Canteen</Text>
+                    <Text style={[typography.bodyLight, { color: colors.textMuted, textAlign: 'center' }]}>AI-Powered Smart Canteen</Text>
                 </Animated.View>
 
                 <Animated.View style={{ opacity: formAnim, transform: [{ translateY: formAnim.interpolate({ inputRange: [0, 1], outputRange: [30, 0] }) }] }}>
                     <View style={styles.roleContainer}>
-                        <TouchableOpacity style={[styles.roleBtn, { borderColor: role === 'student' ? COLORS.lime : 'rgba(255,255,255,0.12)', backgroundColor: role === 'student' ? 'rgba(164,198,57,0.12)' : 'transparent', borderRadius: radius.full }]} onPress={() => setRole('student')}>
-                            <Ionicons name="school" size={16} color={role === 'student' ? COLORS.lime : COLORS.white40} style={{ marginRight: 6 }} />
-                            <Text style={[typography.bodyBold, { color: role === 'student' ? COLORS.lime : COLORS.white40 }]}>Student</Text>
+                        <TouchableOpacity style={[styles.roleBtn, { borderColor: role === 'student' ? COLORS.lime : colors.border, backgroundColor: role === 'student' ? 'rgba(164,198,57,0.12)' : 'transparent', borderRadius: radius.full }]} onPress={() => setRole('student')}>
+                            <Ionicons name="school" size={16} color={role === 'student' ? COLORS.lime : colors.textMuted} style={{ marginRight: 6 }} />
+                            <Text style={[typography.bodyBold, { color: role === 'student' ? COLORS.lime : colors.textMuted }]}>Student</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.roleBtn, { borderColor: role === 'staff' ? COLORS.cyan : 'rgba(255,255,255,0.12)', backgroundColor: role === 'staff' ? 'rgba(6,182,212,0.12)' : 'transparent', borderRadius: radius.full }]} onPress={() => setRole('staff')}>
-                            <Ionicons name="restaurant" size={16} color={role === 'staff' ? COLORS.cyan : COLORS.white40} style={{ marginRight: 6 }} />
-                            <Text style={[typography.bodyBold, { color: role === 'staff' ? COLORS.cyan : COLORS.white40 }]}>Staff</Text>
+                        <TouchableOpacity style={[styles.roleBtn, { borderColor: role === 'staff' ? COLORS.cyan : colors.border, backgroundColor: role === 'staff' ? 'rgba(6,182,212,0.12)' : 'transparent', borderRadius: radius.full }]} onPress={() => setRole('staff')}>
+                            <Ionicons name="restaurant" size={16} color={role === 'staff' ? COLORS.cyan : colors.textMuted} style={{ marginRight: 6 }} />
+                            <Text style={[typography.bodyBold, { color: role === 'staff' ? COLORS.cyan : colors.textMuted }]}>Staff</Text>
                         </TouchableOpacity>
                     </View>
 
                     <View style={[styles.inputGroup, { marginTop: spacing.lg }]}>
-                        <Text style={[typography.caption, { color: COLORS.white40, marginBottom: spacing.xs, marginLeft: spacing.xs }]}>USERNAME</Text>
-                        <TextInput style={[styles.input, { backgroundColor: 'rgba(255,255,255,0.06)', color: '#FFF', borderColor: 'rgba(255,255,255,0.10)', borderRadius: radius.md }]} placeholder="Enter your username" placeholderTextColor={COLORS.white40} value={username} onChangeText={setUsername} autoCapitalize="none" />
+                        <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs, marginLeft: spacing.xs }]}>USERNAME</Text>
+                        <TextInput style={[styles.input, { backgroundColor: colors.inputBg, color: colors.text, borderColor: colors.border, borderRadius: radius.md }]} placeholder="Enter your username" placeholderTextColor={colors.textMuted} value={username} onChangeText={setUsername} autoCapitalize="none" />
                     </View>
                     <View style={[styles.inputGroup, { marginTop: spacing.md }]}>
-                        <Text style={[typography.caption, { color: COLORS.white40, marginBottom: spacing.xs, marginLeft: spacing.xs }]}>PASSWORD</Text>
-                        <TextInput style={[styles.input, { backgroundColor: 'rgba(255,255,255,0.06)', color: '#FFF', borderColor: 'rgba(255,255,255,0.10)', borderRadius: radius.md }]} placeholder="Enter your password" placeholderTextColor={COLORS.white40} value={password} onChangeText={setPassword} secureTextEntry />
+                        <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs, marginLeft: spacing.xs }]}>PASSWORD</Text>
+                        <TextInput style={[styles.input, { backgroundColor: colors.inputBg, color: colors.text, borderColor: colors.border, borderRadius: radius.md }]} placeholder="Enter your password" placeholderTextColor={colors.textMuted} value={password} onChangeText={setPassword} secureTextEntry />
                     </View>
 
                     {error ? <Text style={[typography.caption, { color: COLORS.danger, marginTop: spacing.sm, textAlign: 'center' }]}>{error}</Text> : null}
 
                     <View style={styles.demoToggleContainer}>
-                        <Text style={[typography.caption, { color: COLORS.white40, marginRight: 8 }]}>Demo Mode (Mock Data)</Text>
+                        <Text style={[typography.caption, { color: colors.textMuted, marginRight: 8 }]}>Demo Mode (Mock Data)</Text>
                         <TouchableOpacity 
-                            style={[styles.toggleTrack, { backgroundColor: isDemo ? COLORS.lime : 'rgba(255,255,255,0.1)' }]} 
+                            style={[styles.toggleTrack, { backgroundColor: isDemo ? COLORS.lime : colors.border }]} 
                             onPress={() => {
                                 const newMode = !isDemo;
                                 setIsDemo(newMode);
@@ -94,7 +94,7 @@ export default function LoginScreen({ navigation }) {
                         >
                             <View style={[styles.toggleThumb, { 
                                 transform: [{ translateX: isDemo ? 20 : 0 }],
-                                backgroundColor: isDemo ? COLORS.midnight : COLORS.white40 
+                                backgroundColor: isDemo ? COLORS.midnight : colors.textMuted 
                             }]} />
                         </TouchableOpacity>
                     </View>
@@ -104,7 +104,7 @@ export default function LoginScreen({ navigation }) {
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => navigation.navigate('Register')} style={{ marginTop: spacing.md }}>
-                        <Text style={[typography.body, { color: COLORS.white40, textAlign: 'center' }]}>
+                        <Text style={[typography.body, { color: colors.textMuted, textAlign: 'center' }]}>
                             Don't have an account? <Text style={{ color: COLORS.lime }}>Create one</Text>
                         </Text>
                     </TouchableOpacity>

@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, ActivityIndicator, StatusBar, Animated, Easing } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import Svg, { Polyline } from 'react-native-svg';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { useTheme, COLORS } from '../context/ThemeContext';
-import { getDashboard, getLiveSensorData, subscribeNotifications, clearNotifications } from '../services/api';
+import { getDashboard, getLiveSensorData, subscribeNotifications, clearNotifications, toggleDemoMode, demoTick } from '../services/api';
 
 function Sparkline({ data, width = 60, height = 24, color = '#06B6D4' }) {
     const values = Array.isArray(data) && data.length > 0 ? data : [];
@@ -64,14 +65,81 @@ export default function StaffDashboard({ navigation }) {
     const [liveData, setLiveData] = useState(null);
     const sensorHistory = useRef({});
 
-    useEffect(() => {
-        loadData();
-        loadLive();
-        const interval = setInterval(loadData, 5000);
-        const liveInterval = setInterval(loadLive, 2000);
-        const unsub = subscribeNotifications(setNotifications);
-        return () => { clearInterval(interval); clearInterval(liveInterval); unsub(); };
+    // ── Demo Mode State ──
+    const [demoMode, setDemoMode] = useState('fresh');   // 'fresh' | 'spoiled'
+    const [demoActive, setDemoActive] = useState(false);
+    const [buzzerPlaying, setBuzzerPlaying] = useState(false);
+    const demoTickRef = useRef(null);
+    const pulseAnim = useRef(new Animated.Value(1)).current;
+
+    useFocusEffect(
+        useCallback(() => {
+            loadData();
+            loadLive();
+            const interval = setInterval(loadData, 5000);
+            const liveInterval = setInterval(loadLive, 2000);
+            const unsub = subscribeNotifications(setNotifications);
+            
+            return () => {
+                clearInterval(interval);
+                clearInterval(liveInterval);
+                unsub();
+                if (demoTickRef.current) clearInterval(demoTickRef.current);
+                stopBuzzer();
+            };
+        }, [loadData, loadLive])
+    );
+
+    // ── Buzzer Visual Indicator (Arduino handles actual buzzer) ──
+    const playBuzzer = useCallback(() => {
+        if (buzzerPlaying) return;
+        setBuzzerPlaying(true);
+        // Only visual pulsing — Arduino hardware buzzer + red LED handle the actual alarm
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(pulseAnim, { toValue: 1.15, duration: 300, useNativeDriver: true }),
+                Animated.timing(pulseAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+            ])
+        ).start();
+    }, [buzzerPlaying]);
+
+    const stopBuzzer = useCallback(() => {
+        setBuzzerPlaying(false);
+        pulseAnim.stopAnimation();
+        pulseAnim.setValue(1);
     }, []);
+
+    // ── Demo Toggle Handler ──
+    const handleDemoToggle = useCallback(async () => {
+        const newMode = demoMode === 'fresh' ? 'spoiled' : 'fresh';
+        setDemoMode(newMode);
+        setDemoActive(true);
+        stopBuzzer();
+
+        // Call backend to switch mode
+        await toggleDemoMode(newMode);
+
+        // Clear any existing tick interval
+        if (demoTickRef.current) clearInterval(demoTickRef.current);
+
+        // Start ticking — every 10s call demo-tick to advance simulation
+        // Backend sends RESULT command to Arduino for buzzer/LED control
+        demoTickRef.current = setInterval(async () => {
+            const result = await demoTick();
+            if (result.status === 'ok') {
+                // Refresh live data to pick up new values
+                loadLive();
+                // Show visual buzzer indicator (Arduino handles actual buzzer)
+                if (result.buzzer) {
+                    playBuzzer();
+                }
+            }
+        }, 10000);
+
+        // Immediately tick once
+        const result = await demoTick();
+        if (result.status === 'ok') loadLive();
+    }, [demoMode, loadLive, playBuzzer, stopBuzzer]);
 
     const loadData = useCallback(async () => {
         const data = await getDashboard();
@@ -261,6 +329,17 @@ export default function StaffDashboard({ navigation }) {
                     </View>
                 )}
 
+                {/* Buzzer Alert Banner — full-width pulsing banner when buzzer is active */}
+                {buzzerPlaying && (
+                    <Animated.View style={[liveStyles.buzzerBanner, { transform: [{ scale: pulseAnim }], borderRadius: radius.sm, marginTop: spacing.sm }]}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Ionicons name="volume-high" size={20} color="#FFF" />
+                            <Text style={[typography.bodyBold, { color: '#FFF', marginLeft: 8, fontSize: 13 }]}>🔔 BUZZER ACTIVE — Food Spoilage Detected!</Text>
+                        </View>
+                        <PulsingDot color="#FFF" size={10} />
+                    </Animated.View>
+                )}
+
                 {/* Action Buttons */}
                 <View style={[liveStyles.actionRow, { marginTop: spacing.md }]}>
                     <TouchableOpacity
@@ -278,6 +357,41 @@ export default function StaffDashboard({ navigation }) {
                         <Text style={[typography.bodyBold, { color: COLORS.cyan }]}>Refresh</Text>
                     </TouchableOpacity>
                 </View>
+
+                {/* ── Discreet Demo Toggle ── */}
+                {/* Looks like a small status indicator at the bottom of the card */}
+                <TouchableOpacity
+                    style={[liveStyles.demoToggle, {
+                        backgroundColor: demoMode === 'fresh'
+                            ? 'rgba(34,197,94,0.10)'
+                            : 'rgba(239,68,68,0.10)',
+                        borderColor: demoMode === 'fresh'
+                            ? 'rgba(34,197,94,0.20)'
+                            : 'rgba(239,68,68,0.20)',
+                        borderRadius: radius.sm,
+                        marginTop: spacing.sm,
+                    }]}
+                    onPress={handleDemoToggle}
+                    activeOpacity={0.6}
+                >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons
+                            name={demoMode === 'fresh' ? 'leaf' : 'warning'}
+                            size={12}
+                            color={demoMode === 'fresh' ? '#22C55E' : '#EF4444'}
+                        />
+                        <Text style={[
+                            typography.small,
+                            { color: demoMode === 'fresh' ? '#22C55E' : '#EF4444', fontSize: 10, letterSpacing: 0.5 }
+                        ]}>
+                            {demoMode === 'fresh' ? 'Fresh food stored' : 'Spoiled — monitoring'}
+                        </Text>
+                    </View>
+                    <View style={{
+                        width: 6, height: 6, borderRadius: 3,
+                        backgroundColor: demoMode === 'fresh' ? '#22C55E' : '#EF4444',
+                    }} />
+                </TouchableOpacity>
             </View>
         );
     };
@@ -507,6 +621,24 @@ const liveStyles = StyleSheet.create({
     bufferFill: {
         height: '100%',
         borderRadius: 3,
+    },
+    buzzerBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 12,
+        backgroundColor: '#DC2626',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.25)',
+    },
+    demoToggle: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderWidth: 1,
+        opacity: 0.7,
     },
 });
 

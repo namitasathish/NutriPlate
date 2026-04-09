@@ -40,10 +40,15 @@ export default function LandingScreen({ navigation }) {
     const getCardStyle = (index) => {
         if (isStaff) {
             // Staff: dark glass cards using theme colors
-            const staffColors = [
-                { bg: 'rgba(6,182,212,0.15)', border: 'rgba(6,182,212,0.25)', iconBg: 'rgba(6,182,212,0.20)', accent: colors.cyan },
-                { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.25)', iconBg: 'rgba(245,158,11,0.20)', accent: colors.warning },
-            ];
+            const staffColors = isDark 
+                ? [
+                    { bg: 'rgba(6,182,212,0.15)', border: 'rgba(6,182,212,0.25)', iconBg: 'rgba(6,182,212,0.20)', accent: colors.cyan },
+                    { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.25)', iconBg: 'rgba(245,158,11,0.20)', accent: colors.warning },
+                ]
+                : [
+                    { bg: '#06B6D4', border: '#0891B2', iconBg: 'rgba(255,255,255,0.20)', accent: '#FFF' },
+                    { bg: '#F59E0B', border: '#D97706', iconBg: 'rgba(255,255,255,0.20)', accent: '#FFF' },
+                ];
             return staffColors[index % staffColors.length];
         }
         // Student: use theme accent and success/warning/danger tints
@@ -116,8 +121,8 @@ export default function LandingScreen({ navigation }) {
                                 <View style={[styles.cardIconCircle, { backgroundColor: cs.iconBg }]}>
                                     <CardIcon name={card.icon} pack={card.iconPack} size={26} color={cs.accent} />
                                 </View>
-                                <Text style={[styles.cardTitle, { color: isDark || !isStaff ? '#FFF' : '#FFF' }]}>{card.title}</Text>
-                                <Text style={[styles.cardDesc, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.75)' }]}>{card.desc}</Text>
+                                <Text style={[styles.cardTitle, { color: isDark ? '#FFF' : '#FFF' }]}>{card.title}</Text>
+                                <Text style={[styles.cardDesc, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.85)' }]}>{card.desc}</Text>
                                 <View style={styles.cardArrow}>
                                     <Feather name="arrow-right" size={18} color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.6)'} />
                                 </View>

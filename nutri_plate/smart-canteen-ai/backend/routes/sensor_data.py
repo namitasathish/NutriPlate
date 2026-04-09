@@ -73,6 +73,18 @@ _baseline_set = False
 _stability = {"spoiled_count": 0, "warning_count": 0}
 STABILITY_REQUIRED = 2  # 2 consecutive readings for faster demo response
 
+# ── Demo Mode State ──
+# Allows frontend to toggle between fresh/spoiled simulation for project review
+_demo_state: Dict[str, Any] = {
+    "mode": "fresh",             # "fresh" or "spoiled"
+    "active": False,             # Whether demo mode is being used
+    "freshness_score": 95.0,     # Current simulated freshness
+    "buzzer_triggered": False,   # Whether buzzer should be sounding
+    "spoil_step": 0,             # How many ticks into spoilage
+    "food_name_fresh": "Demo Food",
+    "food_name_spoiled": "Demo Food",
+}
+
 # ════════════════════════════════════════════
 # CORE PROCESSING FUNCTIONS
 # ════════════════════════════════════════════
@@ -175,11 +187,18 @@ def process_raw_reading(reading_dict: dict) -> dict:
         heuristic_status = "Fresh"
 
     try:
-        update_container(LIVE_CONTAINER_ID, {
-            "sensor_readings": [reading_dict],
-            "freshness_score": score,
-            "status": heuristic_status,
-        })
+        if not _demo_state.get("active"):
+            update_container(LIVE_CONTAINER_ID, {
+                "sensor_readings": [reading_dict],
+                "freshness_score": score,
+                "status": heuristic_status,
+            })
+        else:
+            # During demo, let the actual sensor readings update the graphs,
+            # but do NOT overwrite the simulated freshness/status
+            update_container(LIVE_CONTAINER_ID, {
+                "sensor_readings": [reading_dict]
+            })
     except Exception as e:
         print(f"DB update error in process_raw_reading: {e}")
 
@@ -258,12 +277,18 @@ def process_sensor_batch(container_id: str, readings: list) -> dict:
         status = container.get("status", "Fresh")
         print(f"[AI] Sensor inference failed — keeping heuristic: {freshness:.0f}% ({status})")
 
-    update_container(container_id, {
-        "sensor_readings": [readings[-1]] if readings else [],
-        "freshness_score": freshness,
-        "status": status,
-        "sensor_score": sensor_score
-    })
+    if not _demo_state.get("active"):
+        update_container(container_id, {
+            "sensor_readings": [readings[-1]] if readings else [],
+            "freshness_score": freshness,
+            "status": status,
+            "sensor_score": sensor_score
+        })
+    else:
+        # During demo, leave the simulated freshness/status alone
+        update_container(container_id, {
+            "sensor_readings": [readings[-1]] if readings else []
+        })
 
     # If this is the live container, update live state with inference results
     if container_id == LIVE_CONTAINER_ID:
@@ -358,3 +383,217 @@ def receive_sensor_data(payload: SensorRequest):
     """HTTP endpoint wrapper around process_sensor_batch."""
     readings_dicts = [r.dict() for r in payload.readings]
     return process_sensor_batch(payload.container_id, readings_dicts)
+
+
+# ════════════════════════════════════════════
+# DEMO MODE ENDPOINTS
+# ════════════════════════════════════════════
+# These allow the frontend to toggle between fresh/spoiled
+# simulation for project review demos.
+# ════════════════════════════════════════════
+
+class DemoToggle(BaseModel):
+    mode: str  # "fresh" or "spoiled"
+
+@router.post("/demo")
+def toggle_demo_mode(payload: DemoToggle):
+    """Toggle demo mode between fresh and spoiled food simulation."""
+    global _demo_state, _stability, _baseline_set
+    mode = payload.mode.lower()
+    if mode not in ("fresh", "spoiled"):
+        raise HTTPException(status_code=400, detail="Mode must be 'fresh' or 'spoiled'")
+
+    _demo_state["active"] = True
+    _demo_state["mode"] = mode
+    _demo_state["buzzer_triggered"] = False
+
+    if mode == "fresh":
+        _demo_state["freshness_score"] = 95.0
+        _demo_state["spoil_step"] = 0
+        _stability["spoiled_count"] = 0
+        _stability["warning_count"] = 0
+        # Update container to fresh state
+        try:
+            update_container(LIVE_CONTAINER_ID, {
+                "freshness_score": 95.0,
+                "status": "Fresh",
+                "food_name": _demo_state["food_name_fresh"],
+            })
+        except Exception as e:
+            print(f"Demo toggle DB error: {e}")
+        # Mark live state as connected so UI shows data
+        _live_state["connected"] = True
+        _live_state["bridge_connected"] = True
+        _live_state["warmup"] = False
+        _live_state["last_raw_time"] = time.time()
+        _live_state["last_ping_time"] = time.time()
+        # Generate fresh sensor readings
+        fresh_reading = {
+            "NH3": 0.30, "H2S": 0.10, "CH4": 300.0,
+            "alcohol": 0.04, "VOC": 0.0, "H2": 0.0,
+            "temperature": 28.5, "humidity": 58.0,
+        }
+        _live_state["latest_reading"] = fresh_reading
+
+    elif mode == "spoiled":
+        _demo_state["freshness_score"] = 85.0  # Start from a decent score
+        _demo_state["spoil_step"] = 0
+        _stability["spoiled_count"] = 0
+        _stability["warning_count"] = 0
+        # Update container name to spoiled food
+        try:
+            update_container(LIVE_CONTAINER_ID, {
+                "food_name": _demo_state["food_name_spoiled"],
+                "freshness_score": 85.0,
+                "status": "Fresh",
+            })
+        except Exception as e:
+            print(f"Demo toggle DB error: {e}")
+        # Mark live state as connected
+        _live_state["connected"] = True
+        _live_state["bridge_connected"] = True
+        _live_state["warmup"] = False
+        _live_state["last_raw_time"] = time.time()
+        _live_state["last_ping_time"] = time.time()
+
+    # ── Immediately update Arduino LEDs/buzzer ──
+    try:
+        from serial_reader import send_to_arduino
+        if mode == "fresh":
+            send_to_arduino("RESULT:95:Fresh")   # Green LED, no buzzer
+        else:
+            send_to_arduino("RESULT:85:Fresh")    # Start fresh, will degrade
+    except Exception as e:
+        print(f"[Demo] Arduino send error: {e}")
+
+    print(f"[Demo] Mode switched to: {mode}")
+    return {"status": "ok", "mode": mode, "freshness": _demo_state["freshness_score"]}
+
+
+@router.post("/demo-tick")
+def demo_tick():
+    """
+    Called periodically by the frontend to advance the spoilage simulation.
+    Each tick degrades the freshness score when in spoiled mode.
+    Returns current freshness, status, and buzzer state.
+    """
+    global _demo_state, _live_state
+
+    if not _demo_state["active"]:
+        return {"status": "inactive", "freshness": 100, "food_status": "Fresh", "buzzer": False}
+
+    mode = _demo_state["mode"]
+    now = time.time()
+
+    if mode == "fresh":
+        # Keep freshness stable and high with minor fluctuation
+        import random
+        _demo_state["freshness_score"] = min(100, max(88, _demo_state["freshness_score"] + random.uniform(-0.5, 0.8)))
+        _demo_state["buzzer_triggered"] = False
+        food_status = "Fresh"
+        # Generate stable fresh readings
+        reading = {
+            "NH3": 0.30 + np.random.uniform(-0.03, 0.03),
+            "H2S": 0.10 + np.random.uniform(-0.02, 0.02),
+            "CH4": 300.0 + np.random.uniform(-8, 8),
+            "alcohol": 0.04 + np.random.uniform(-0.005, 0.005),
+            "VOC": 0.0, "H2": 0.0,
+            "temperature": 28.5 + np.random.uniform(-0.5, 0.5),
+            "humidity": 58.0 + np.random.uniform(-1, 1),
+        }
+    else:
+        # SPOILED mode — gradual degradation
+        _demo_state["spoil_step"] += 1
+        step = _demo_state["spoil_step"]
+
+        # Random small decay each 10s tick for natural-looking degradation
+        import random
+        decay = random.uniform(0.2, 2.0)
+
+        _demo_state["freshness_score"] = max(0, _demo_state["freshness_score"] - decay)
+        freshness = _demo_state["freshness_score"]
+
+        if freshness < 40:
+            food_status = "Spoiled"
+            _demo_state["buzzer_triggered"] = True
+        elif freshness < 70:
+            food_status = "Warning"
+        else:
+            food_status = "Fresh"
+
+        # Simulate worsening sensor readings
+        gas_multiplier = 1.0 + (step * 0.5)
+        reading = {
+            "NH3": 0.30 + (step * 1.2),
+            "H2S": 0.10 + (step * 0.8),
+            "CH4": 300.0 + (step * 80),
+            "alcohol": 0.04 + (step * 0.02),
+            "VOC": step * 0.5, "H2": step * 0.3,
+            "temperature": 28.5 + min(step * 0.8, 12),
+            "humidity": 58.0 + min(step * 2, 30),
+        }
+
+    # Round all reading values
+    reading = {k: round(float(v), 3) for k, v in reading.items()}
+
+    # Update live state
+    _live_state["latest_reading"] = reading
+    _live_state["connected"] = True
+    _live_state["bridge_connected"] = True
+    _live_state["warmup"] = False
+    _live_state["last_raw_time"] = now
+    _live_state["last_ping_time"] = now
+
+    # Update history
+    history = _live_state["history"]
+    for key in ["temperature", "humidity", "NH3", "H2S", "CH4", "alcohol"]:
+        val = reading.get(key, 0.0)
+        history[key] = history[key][-MAX_HISTORY + 1:] + [val]
+
+    # Update buffer
+    _live_state["buffer_count"] = min(_live_state["buffer_count"] + 1, 30)
+
+    freshness = round(_demo_state["freshness_score"], 1)
+
+    # Persist to database
+    try:
+        update_container(LIVE_CONTAINER_ID, {
+            "sensor_readings": [reading],
+            "freshness_score": freshness,
+            "status": food_status,
+        })
+    except Exception as e:
+        print(f"Demo tick DB error: {e}")
+
+    # ── Send RESULT to Arduino for buzzer/LED control ──
+    # Arduino parses "RESULT:<freshness>:<status>" and drives:
+    #   Fresh   → solid GREEN LED, no buzzer
+    #   Warning → RED+GREEN blink, occasional beep
+    #   Spoiled → solid RED LED, continuous alarm buzzer
+    try:
+        from serial_reader import send_to_arduino
+        send_to_arduino(f"RESULT:{int(freshness)}:{food_status}")
+    except Exception as e:
+        print(f"[Demo] Arduino send error: {e}")
+
+    return {
+        "status": "ok",
+        "freshness": freshness,
+        "food_status": food_status,
+        "buzzer": _demo_state["buzzer_triggered"],
+        "mode": mode,
+        "step": _demo_state["spoil_step"],
+        "reading": reading,
+    }
+
+
+@router.get("/demo-status")
+def get_demo_status():
+    """Returns current demo mode state for the frontend."""
+    return {
+        "active": _demo_state["active"],
+        "mode": _demo_state["mode"],
+        "freshness": round(_demo_state["freshness_score"], 1),
+        "buzzer": _demo_state["buzzer_triggered"],
+        "step": _demo_state["spoil_step"],
+    }

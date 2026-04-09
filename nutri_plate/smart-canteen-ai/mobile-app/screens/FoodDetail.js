@@ -107,12 +107,12 @@ export default function FoodDetail({ route }) {
                 <Text style={[typography.label, { color: colors.textMuted, marginBottom: spacing.md }]}>Nutrition Facts</Text>
                 {nutrition ? (
                     <View>
-                        <NutritionBar label="Calories" value={nutrition.calories} max={500} color="#EF4444" unit=" kcal" />
-                        <NutritionBar label="Protein" value={nutrition.protein} max={50} color="#6C63FF" unit="g" />
-                        <NutritionBar label="Carbs" value={nutrition.carbohydrates} max={80} color="#F59E0B" unit="g" />
-                        <NutritionBar label="Fat" value={nutrition.fat} max={40} color="#A78BFA" unit="g" />
-                        <NutritionBar label="Vitamins" value={nutrition.vitamins} max={30} color="#22C55E" unit="%" />
-                        <NutritionBar label="Calcium" value={nutrition.calcium} max={30} color="#06B6D4" unit="%" />
+                        <NutritionBar label="Calories" value={nutrition.calories || 0} max={500} color={colors.danger} unit=" kcal" />
+                        <NutritionBar label="Protein" value={nutrition.protein || 0} max={50} color={colors.cyan} unit="g" />
+                        <NutritionBar label="Carbs" value={nutrition.carbohydrates || 0} max={80} color={colors.warning} unit="g" />
+                        <NutritionBar label="Fat" value={nutrition.fat || 0} max={40} color="#A78BFA" unit="g" />
+                        <NutritionBar label="Vitamins" value={nutrition.vitamins || 0} max={30} color={colors.success} unit="%" />
+                        <NutritionBar label="Calcium" value={nutrition.calcium || 0} max={30} color={colors.cyan} unit="%" />
                     </View>
                 ) : <Text style={[typography.body, { color: colors.textMuted, fontStyle: 'italic' }]}>Nutrition data not available.</Text>}
             </View>

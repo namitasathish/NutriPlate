@@ -82,7 +82,7 @@ def preprocess_image_vision_onnx(img_bytes):
     img_data = (img_data - mean) / std
     img_data = np.transpose(img_data, (2, 0, 1)) # HWC -> CHW for ONNX
     img_data = np.expand_dims(img_data, axis=0)
-    return img_data
+    return img_data.astype(np.float32)
 
 @router.post("/upload")
 async def upload_image(
@@ -160,7 +160,7 @@ async def upload_image(
     update_container(target_id, {
         "food_name": food_name,
         "vision_features": vision_features,
-        "vision_spoilage_score": spoilage_prob,
+        "vision_spoilage": spoilage_prob,
         # We don't overwrite sensor data here, just vision
         "status": status, # simple status update based on vision only for immediate feedback
         "freshness_score": freshness 

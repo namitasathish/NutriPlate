@@ -168,7 +168,7 @@ export default function CameraScreen({ navigation, route }) {
 
     // Preview mode
     if (capturedUri) return (
-        <View style={[styles.container, { backgroundColor: '#000' }]}>
+        <View style={[styles.container, { backgroundColor: colors.bg }]}>
             <StatusBar barStyle="light-content" />
             <Image source={{ uri: capturedUri }} style={styles.preview} />
             {uploading && (
@@ -177,11 +177,11 @@ export default function CameraScreen({ navigation, route }) {
                     <TypewriterText phases={['Scanning...', 'Analyzing...', 'Processing result']} style={{ color: COLORS.lime, fontSize: 16, textAlign: 'center', marginTop: 12 }} monoStyle={fonts.jetbrains} />
                 </View>
             )}
-            <Animated.View style={[styles.bottomSheet, { height: sheetHeight, backgroundColor: 'rgba(15,23,42,0.92)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', borderRadius: 14 }]}>
+            <Animated.View style={[styles.bottomSheet, { height: sheetHeight, backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.border, borderRadius: 14 }]}>
                 {sheetStage >= 1 && uploadResult && (
                     <View style={{ padding: 20 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Text style={[typography.h3, { color: '#FFF' }]}>{uploadResult.food_name}</Text>
+                            <Text style={[typography.h3, { color: colors.text }]}>{uploadResult.food_name}</Text>
                             <FreshnessPill score={(1 - uploadResult.vision_spoilage_score) * 100} />
                         </View>
                         <Text style={[typography.caption, { color: 'rgba(255,255,255,0.5)', marginTop: 4 }]}>Confidence: {((1 - uploadResult.vision_spoilage_score) * 100).toFixed(0)}%</Text>
@@ -217,7 +217,7 @@ export default function CameraScreen({ navigation, route }) {
                     <View style={{ flexDirection: 'row', gap: 10 }}>
                         <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: radius.md, flex: 1 }]} onPress={() => { setCapturedUri(null); setUploadResult(null); animateSheet(0); }}>
                             <Feather name="refresh-cw" size={14} color="#FFF" style={{ marginRight: 4 }} />
-                            <Text style={[typography.bodyBold, { color: '#FFF' }]}>Retake</Text>
+                            <Text style={[typography.bodyBold, { color: colors.text }]}>Retake</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.actionBtn, { backgroundColor: COLORS.lime, borderRadius: radius.md, flex: 1 }]} onPress={mode === 'plate_scan' ? handlePlateScan : handleStaffUpload} disabled={uploading}>
                             <Ionicons name={mode === 'plate_scan' ? 'search' : 'cloud-upload'} size={16} color={COLORS.midnight} style={{ marginRight: 4 }} />
@@ -231,7 +231,7 @@ export default function CameraScreen({ navigation, route }) {
                     <View style={{ flexDirection: 'row', gap: 10 }}>
                         <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: radius.md, flex: 1 }]} onPress={() => { setCapturedUri(null); setUploadResult(null); animateSheet(0); }}>
                             <Feather name="refresh-cw" size={14} color="#FFF" style={{ marginRight: 4 }} />
-                            <Text style={[typography.bodyBold, { color: '#FFF' }]}>New Scan</Text>
+                            <Text style={[typography.bodyBold, { color: colors.text }]}>New Scan</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.actionBtn, { backgroundColor: COLORS.lime, borderRadius: radius.md, flex: 1 }]} onPress={() => navigation.goBack()}>
                             <Ionicons name="checkmark-circle" size={16} color={COLORS.midnight} style={{ marginRight: 4 }} />
@@ -245,13 +245,13 @@ export default function CameraScreen({ navigation, route }) {
 
     // Camera mode
     return (
-        <View style={[styles.container, { backgroundColor: '#000' }]}>
+        <View style={[styles.container, { backgroundColor: colors.bg }]}>
             <StatusBar barStyle="light-content" />
             <CameraView style={styles.camera} facing="back" ref={cameraRef} />
             <View style={styles.overlay}>
                 <View style={[styles.hintPill, { borderRadius: radius.full }]}>
                     <Ionicons name="camera" size={16} color="#FFF" style={{ marginRight: 6 }} />
-                    <Text style={[typography.bodyBold, { color: '#FFF' }]}>
+                    <Text style={[typography.bodyBold, { color: colors.text }]}>
                         {mode === 'plate_scan' ? 'Scan your plate' : containerId ? `Update ${containerId}` : 'Scan new food'}
                     </Text>
                 </View>

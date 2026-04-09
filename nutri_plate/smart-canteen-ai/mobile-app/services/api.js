@@ -441,6 +441,39 @@ export const getLiveSensorData = async () => {
 };
 
 // ============================================================
+// DEMO MODE TOGGLE (for project review)
+// ============================================================
+export const toggleDemoMode = async (mode) => {
+    // mode: "fresh" or "spoiled"
+    try {
+        const resp = await api.post('/sensor/demo', { mode });
+        return resp.data;
+    } catch (e) {
+        console.warn('[Demo] Toggle failed:', e.message || e);
+        return { status: 'error' };
+    }
+};
+
+export const demoTick = async () => {
+    try {
+        const resp = await api.post('/sensor/demo-tick');
+        return resp.data;
+    } catch (e) {
+        console.warn('[Demo] Tick failed:', e.message || e);
+        return { status: 'error', freshness: 100, food_status: 'Fresh', buzzer: false };
+    }
+};
+
+export const getDemoStatus = async () => {
+    try {
+        const resp = await api.get('/sensor/demo-status');
+        return resp.data;
+    } catch (e) {
+        return { active: false, mode: 'fresh', freshness: 100, buzzer: false };
+    }
+};
+
+// ============================================================
 // AUTH FUNCTIONS (Mock Mode)
 // ============================================================
 const MOCK_USERS = {};
