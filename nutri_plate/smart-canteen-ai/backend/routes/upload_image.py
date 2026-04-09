@@ -5,25 +5,44 @@ import os
 import numpy as np
 from PIL import Image
 import io
-import tensorflow as tf
-# Robust Keras import
-try:
-    from tensorflow.keras.preprocessing import image as keras_image
-except ImportError:
-    try:
-        import keras.preprocessing.image as keras_image
-    except ImportError:
-        # Final fallback, maybe just keras.preprocessing?
-        from keras.preprocessing import image as keras_image
 import onnxruntime as ort
 
-from models.food_recognition import get_food_model, FOOD_LABELS
 from routes.food_list import FOOD_DATA
+from database import update_container
 
 router = APIRouter(tags=["upload"])
 
-# Load models
-food_model = get_food_model()
+# ── Lazy-load heavy ML deps so backend starts even without TF installed ──
+_tf = None
+_keras_image = None
+_food_model = None
+_food_labels = None
+
+def _get_tf():
+    global _tf, _keras_image
+    if _tf is None:
+        try:
+            import tensorflow as tf
+            _tf = tf
+            try:
+                from tensorflow.keras.preprocessing import image as ki
+            except ImportError:
+                from keras.preprocessing import image as ki
+            _keras_image = ki
+        except Exception as e:
+            print(f"[INFO] TensorFlow not available: {e}. Vision/food recognition disabled.")
+    return _tf, _keras_image
+
+def _get_food_model():
+    global _food_model, _food_labels
+    if _food_model is None:
+        try:
+            from models.food_recognition import get_food_model, FOOD_LABELS
+            _food_model = get_food_model()
+            _food_labels = FOOD_LABELS
+        except Exception as e:
+            print(f"[INFO] Food model not loaded: {e}")
+    return _food_model, _food_labels
 
 # Load ONNX Vision Model
 VISION_MODEL_PATH = "models/vision_efficientnet.onnx"
@@ -39,6 +58,9 @@ def get_vision_session():
     return _vision_session
 
 def preprocess_image_food(img_bytes):
+    tf, keras_image = _get_tf()
+    if keras_image is None:
+        return None
     img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
     img = img.resize((224, 224))
     x = keras_image.img_to_array(img)
@@ -69,11 +91,18 @@ async def upload_image(
 ):
     contents = await file.read()
     
-    # 1. Food Recognition
-    x_food = preprocess_image_food(contents)
-    preds = food_model.predict(x_food)
-    top_idx = np.argmax(preds[0])
-    food_name = FOOD_LABELS[top_idx]
+    # 1. Food Recognition (lazy — skipped if TF not ready)
+    food_model, food_labels = _get_food_model()
+    food_name = "Unknown Food"
+    if food_model is not None and food_labels is not None:
+        try:
+            x_food = preprocess_image_food(contents)
+            if x_food is not None:
+                preds = food_model.predict(x_food)
+                top_idx = np.argmax(preds[0])
+                food_name = food_labels[top_idx]
+        except Exception as e:
+            print(f"Food recognition error: {e}")
     
     # 2. Vision Anomaly (Spoilix Model)
     # Using it as feature extractor as per instructions

@@ -7,3 +7,6 @@ seaborn
 h5py
 sklearn
 keras
+python-dotenv
+requests
+pandas

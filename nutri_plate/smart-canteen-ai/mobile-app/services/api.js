@@ -4,7 +4,11 @@ import axios from 'axios';
 // API Configuration
 // ============================================================
 const API_URL = 'http://192.168.1.15:8000';
-const USE_MOCK = true;
+export let USE_MOCK = false;
+
+export const setMockMode = (mode) => {
+    USE_MOCK = mode;
+};
 
 export const api = axios.create({ baseURL: API_URL, timeout: 5000 });
 
@@ -353,6 +357,87 @@ export const uploadImage = async (imageUri, containerId) => {
     if (containerId) formData.append('container_id', containerId);
     const response = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 15000 });
     return response.data;
+};
+
+// ============================================================
+// LIVE HARDWARE SENSOR DATA
+// ============================================================
+let _mockLiveState = {
+    connected: true,
+    bridge_connected: true,   // show as connected in demo mode
+    warmup: false,
+    latest_reading: { NH3: 0.32, H2S: 0.12, CH4: 305.0, alcohol: 0.05, VOC: 0.0, H2: 0.0, temperature: 29.8, humidity: 62.0 },
+    history: {
+        temperature: [29.2, 29.4, 29.5, 29.3, 29.6, 29.8, 29.7, 29.9, 30.0, 29.8],
+        humidity: [61.0, 61.5, 62.0, 61.8, 62.3, 62.1, 61.9, 62.0, 62.5, 62.0],
+        NH3: [0.28, 0.30, 0.29, 0.31, 0.30, 0.33, 0.32, 0.31, 0.34, 0.32],
+        H2S: [0.10, 0.11, 0.12, 0.10, 0.11, 0.13, 0.12, 0.11, 0.12, 0.12],
+        CH4: [300, 302, 305, 301, 308, 304, 306, 310, 307, 305],
+        alcohol: [0.04, 0.05, 0.04, 0.06, 0.05, 0.04, 0.05, 0.06, 0.05, 0.05],
+    },
+    buffer_count: 0,
+    last_inference_time: Date.now() / 1000,
+    container: MOCK_CONTAINERS.find(c => c.id === 'C1') || MOCK_CONTAINERS[0],
+};
+
+// Simulate live sensor drift every 2 seconds
+setInterval(() => {
+    const r = _mockLiveState.latest_reading;
+    const drift = (base, range) => parseFloat((base + (Math.random() * range * 2 - range)).toFixed(2));
+    _mockLiveState.latest_reading = {
+        NH3: Math.max(0, drift(r.NH3, 0.04)),
+        H2S: Math.max(0, drift(r.H2S, 0.02)),
+        CH4: Math.max(0, drift(r.CH4, 5)),
+        alcohol: Math.max(0, drift(r.alcohol, 0.01)),
+        VOC: 0.0,
+        H2: 0.0,
+        temperature: drift(r.temperature, 0.3),
+        humidity: Math.max(0, Math.min(100, drift(r.humidity, 0.5))),
+    };
+
+    // Append to rolling history
+    const h = _mockLiveState.history;
+    const nr = _mockLiveState.latest_reading;
+    h.temperature = [...h.temperature.slice(-29), nr.temperature];
+    h.humidity = [...h.humidity.slice(-29), nr.humidity];
+    h.NH3 = [...h.NH3.slice(-29), nr.NH3];
+    h.H2S = [...h.H2S.slice(-29), nr.H2S];
+    h.CH4 = [...h.CH4.slice(-29), nr.CH4];
+    h.alcohol = [...h.alcohol.slice(-29), nr.alcohol];
+
+    // Cycle buffer count 0 -> 30 -> 0
+    _mockLiveState.buffer_count = (_mockLiveState.buffer_count + 1) % 31;
+    if (_mockLiveState.buffer_count === 0) {
+        _mockLiveState.last_inference_time = Date.now() / 1000;
+    }
+
+    // Sync with the mock container C1
+    const c1 = MOCK_CONTAINERS.find(c => c.id === 'C1');
+    if (c1) {
+        _mockLiveState.container = { ...c1, sensor_readings: [nr] };
+    }
+}, 2000);
+
+export const getLiveSensorData = async () => {
+    if (USE_MOCK) return { ..._mockLiveState };
+    try {
+        const resp = await api.get('/sensor/live');
+        return resp.data;
+    } catch (e) {
+        // API call failed — show disconnected state (not mock data)
+        // Common causes: wrong IP in API_URL, backend not running
+        console.warn('[LiveSensor] Failed to reach backend:', e.message || e);
+        return {
+            connected: false,
+            bridge_connected: false,
+            warmup: false,
+            latest_reading: null,
+            history: { temperature: [], humidity: [], NH3: [], H2S: [], CH4: [], alcohol: [] },
+            buffer_count: 0,
+            container: null,
+            last_inference_time: null,
+        };
+    }
 };
 
 // ============================================================

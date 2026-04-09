@@ -9,3 +9,4 @@ requests
 websockets
 jinja2
 pydantic
+pyserial

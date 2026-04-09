@@ -23,10 +23,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize SQLite DB on startup
+# Initialize SQLite DB and start Arduino serial reader on startup
 @app.on_event("startup")
 def startup():
     init_db()
+    # Start background thread that auto-detects Arduino and reads sensor data
+    from serial_reader import start_serial_reader
+    start_serial_reader()
 
 # Websocket manager
 class ConnectionManager:

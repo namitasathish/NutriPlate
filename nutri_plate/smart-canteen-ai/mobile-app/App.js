@@ -1,6 +1,10 @@
 import React from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useFonts, Syne_600SemiBold, Syne_700Bold, Syne_800ExtraBold } from '@expo-google-fonts/syne';
+import { DMSans_300Light, DMSans_400Regular, DMSans_500Medium, DMSans_700Bold } from '@expo-google-fonts/dm-sans';
+import { JetBrainsMono_400Regular, JetBrainsMono_500Medium } from '@expo-google-fonts/jetbrains-mono';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -32,9 +36,9 @@ function StudentStack() {
     return (
         <Stack.Navigator
             screenOptions={{
-                headerStyle: { backgroundColor: colors.navBg },
-                headerTintColor: colors.text,
-                headerTitleStyle: { fontWeight: '600' },
+                headerStyle: { backgroundColor: colors.cream },
+                headerTintColor: colors.greenDeep,
+                headerTitleStyle: { fontFamily: 'Syne_700Bold', fontSize: 17 },
                 headerShadowVisible: false,
             }}
         >
@@ -55,9 +59,13 @@ function StaffStack() {
     return (
         <Stack.Navigator
             screenOptions={{
-                headerStyle: { backgroundColor: colors.navBg },
-                headerTintColor: colors.text,
-                headerTitleStyle: { fontWeight: '600' },
+                headerStyle: {
+                    backgroundColor: colors.midnight,
+                    borderBottomWidth: 1,
+                    borderBottomColor: 'rgba(255,255,255,0.08)',
+                },
+                headerTintColor: colors.cyan,
+                headerTitleStyle: { fontFamily: 'Syne_700Bold', fontSize: 17 },
                 headerShadowVisible: false,
             }}
         >
@@ -100,6 +108,26 @@ function AppNavigator() {
 }
 
 export default function App() {
+    const [fontsLoaded] = useFonts({
+        Syne_600SemiBold,
+        Syne_700Bold,
+        Syne_800ExtraBold,
+        DMSans_300Light,
+        DMSans_400Regular,
+        DMSans_500Medium,
+        DMSans_700Bold,
+        JetBrainsMono_400Regular,
+        JetBrainsMono_500Medium,
+    });
+
+    if (!fontsLoaded) {
+        return (
+            <View style={styles.loading}>
+                <ActivityIndicator size="large" color="#A4C639" />
+            </View>
+        );
+    }
+
     return (
         <ThemeProvider>
             <AuthProvider>
@@ -108,3 +136,12 @@ export default function App() {
         </ThemeProvider>
     );
 }
+
+const styles = StyleSheet.create({
+    loading: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#0F172A',
+    },
+});
