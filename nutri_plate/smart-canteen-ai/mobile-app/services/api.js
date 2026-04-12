@@ -3,7 +3,7 @@ import axios from 'axios';
 // ============================================================
 // API Configuration
 // ============================================================
-const API_URL = 'http://192.168.1.15:8000';
+const API_URL = 'http://172.20.10.4:8000';
 export let USE_MOCK = false;
 
 export const setMockMode = (mode) => {
