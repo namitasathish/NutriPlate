@@ -4,7 +4,6 @@
 
 NutriPlate is a multi-modal AI system that brings intelligence, safety, and personalization to canteen dining. It combines **computer vision**, **sensor-based analysis**, and **recommendation logic** to help users make informed food choices while enabling staff to monitor food freshness in real time.
 
----
 
 ## Key Features
 
@@ -14,7 +13,7 @@ NutriPlate is a multi-modal AI system that brings intelligence, safety, and pers
 - Personalized meal recommendations  
 - Real-time staff dashboard for container monitoring  
 
----
+
 
 ## Tech Stack
 
@@ -33,7 +32,7 @@ NutriPlate is a multi-modal AI system that brings intelligence, safety, and pers
 - Arduino + MQ sensors (MQ-3, MQ-4, MQ-135, MQ-136)  
 - DHT11 (temperature & humidity)  
 
----
+
 
 ## Models Used
 
@@ -42,27 +41,24 @@ NutriPlate is a multi-modal AI system that brings intelligence, safety, and pers
 - **Dataset:** Food-101 (101 classes)  
 - **Output:** Food label used to fetch nutritional data  
 
----
 
 ### 2. Vision Spoilage Detection
 - **Model:** EfficientNet-B0  
 - **Output:** Spoilage probability + feature vector  
 
----
 
 ### 3. Sensor-Based Detection
 - **Model:** BiLSTM  
 - **Input:** Time-series sensor data (gas + environmental readings)  
 - **Purpose:** Detect early spoilage patterns  
 
----
+
 
 ### 4. Multimodal Fusion
 - **Model:** MLP  
 - **Input:** Vision + sensor features  
 - **Output:** Final freshness score  
 
----
 
 ## Recommendation Engine
 
@@ -71,7 +67,7 @@ A heuristic scoring system that suggests meals based on:
 - Protein needs (highest priority)  
 - Fat and portion balance  
 
----
+
 
 ## System Flow
 
