@@ -77,3 +77,22 @@ A heuristic scoring system that suggests meals based on:
 4. Fuse results (MLP)  
 5. Map nutrition + generate recommendations  
 6. Display results to student (app) and staff (dashboard)  
+
+# Peek into the project
+<table>
+  <tr>
+    <td><img src="nutri_plate/smart-canteen-ai/assets/1.jpeg" width="250"></td>
+    <td><img src="nutri_plate/smart-canteen-ai/assets/2.jpeg" width="250"></td>
+    <td><img src="nutri_plate/smart-canteen-ai/assets/3.jpeg" width="250"></td>
+  </tr>
+  <tr>
+    <td><img src="nutri_plate/smart-canteen-ai/assets/4.jpeg" width="250"></td>
+    <td><img src="nutri_plate/smart-canteen-ai/assets/7.jpeg" width="250"></td>
+    <td><img src="nutri_plate/smart-canteen-ai/assets/6.jpeg" width="250"></td>
+  </tr>
+  <tr>
+    <td><img src="nutri_plate/smart-canteen-ai/assets/5.jpeg" width="250"></td>
+    <td><img src="nutri_plate/smart-canteen-ai/assets/8.jpeg" width="250"></td>
+    <td><img src="nutri_plate/smart-canteen-ai/assets/9.jpeg" width="250"></td>
+  </tr>
+</table>
