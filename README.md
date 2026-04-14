@@ -87,11 +87,11 @@ A heuristic scoring system that suggests meals based on:
   </tr>
   <tr>
     <td><img src="nutri_plate/smart-canteen-ai/assets/4.jpeg" width="250"></td>
-    <td><img src="nutri_plate/smart-canteen-ai/assets/7.jpeg" width="250"></td>
+    <td><img src="nutri_plate/smart-canteen-ai/assets/5.jpeg" width="250"></td>
     <td><img src="nutri_plate/smart-canteen-ai/assets/6.jpeg" width="250"></td>
   </tr>
   <tr>
-    <td><img src="nutri_plate/smart-canteen-ai/assets/5.jpeg" width="250"></td>
+    <td><img src="nutri_plate/smart-canteen-ai/assets/7.jpeg" width="250"></td>
     <td><img src="nutri_plate/smart-canteen-ai/assets/8.jpeg" width="250"></td>
     <td><img src="nutri_plate/smart-canteen-ai/assets/9.jpeg" width="250"></td>
   </tr>
